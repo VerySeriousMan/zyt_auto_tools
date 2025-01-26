@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2025.01.02
 Author: ZhangYuetao
 File Name: setup.py
-Update: 2025.01.23
+Update: 2025.01.26
 """
 
 from setuptools import setup, find_packages
@@ -16,7 +16,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 # noinspection PyInterpreter
 setup(
     name="zyt_auto_tools",
-    version="0.2.3",
+    version="0.3.1",
     author="ZhangYuetao",
     author_email="zhang894171707@gmail.com",
     description="A collection of automation tools for Python projects",
@@ -36,6 +36,7 @@ setup(
             "auto-generate-init=zyt_auto_tools.auto_generate_init:main",
             "auto-init-python-file=zyt_auto_tools.auto_init_python_file:main",
             "auto-update-ctime=zyt_auto_tools.auto_update_ctime:main",
+            "auto-create-structure=zyt_auto_tools.auto_create_structure:main",
         ],
     },
 )

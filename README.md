@@ -1,21 +1,24 @@
-# Zyt Auto Tools
+# zyt_auto_tools
 
 [![PyPI Version](https://img.shields.io/pypi/v/zyt_auto_tools.svg)](https://pypi.org/project/zyt_auto_tools/)
 [![License](https://img.shields.io/pypi/l/zyt_auto_tools.svg)](https://opensource.org/licenses/MIT)
 [![Python Version](https://img.shields.io/pypi/pyversions/zyt_auto_tools.svg)](https://www.python.org/downloads/)
 
-**Zyt Auto Tools** 是一个 Python 工具集，旨在帮助开发者自动化常见的项目任务。它包含以下工具：
+**zyt_auto_tools** 是一个 Python 工具集，旨在帮助开发者自动化常见的项目任务。它包含以下工具：
 
 1. **自动生成 `__init__.py` 文件**：根据指定目录下的指定部分文件，自动生成 `__init__.py` 文件。
 2. **自动创建 Python 文件**：快速生成带有标准模板的 Python 文件。
 3. **自动更新文件修改时间**：更新项目中今天修改过的 `.py` 文件的 `Update` 日期。
+4. **自动生成项目结构图**：生成项目的目录结构图，支持文本和 `.gitignore` 规则。
+
+---
 
 ## 安装
 
 你可以通过 `pip` 安装这个工具集：
 
 ```bash
-pip install zyt_auto_tools
+pip install zyt-auto-tools
 ```
 
 ## 使用方法
@@ -112,6 +115,40 @@ auto-update-ctime
 ```bash
 auto-update-ctime --dir ./my_project
 ```
+
+### 4. 自动生成项目结构图
+
+在项目根目录下运行以下命令，生成项目的目录结构图（默认输出到控制台）：
+
+```bash
+auto-update-ctime
+```
+
+#### ① 你还可以通过 '**-d**' 或 '**--dir**' 指定目标目录：
+
+```bash
+auto-create-structure --dir ./my_project
+```
+
+#### ② 你还可以通过 -o 或 --output 指定输出文件路径：
+
+```bash
+auto-create-structure --output project_structure.txt
+```
+
+#### ③ 你还可以通过 -i 或 --ignore 指定额外忽略的目录/文件（支持通配符）：
+
+```bash
+auto-create-structure --ignore *.log tests/
+```
+
+#### ④ 你还可以通过 --use-gitignore 使用 .gitignore 文件中的规则替换默认忽略列表：
+
+```bash
+auto-create-structure --use-gitignore
+```
+
+---
 
 ## 贡献
 
