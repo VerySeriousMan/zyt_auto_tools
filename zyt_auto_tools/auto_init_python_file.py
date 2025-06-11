@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2023.12.31
 Author: ZhangYuetao
 File Name: auto_init_python_file.py
-Update: 2025.01.07
+Update: 2025.06.06
 """
 
 import os
@@ -12,7 +12,7 @@ import argparse
 from datetime import datetime
 
 
-def create_py_file(file_name, author, target_dir=None, ):
+def create_py_file(file_name, author, target_dir=None):
     """
     创建一个 .py 文件，并填充初始内容
 
@@ -20,6 +20,8 @@ def create_py_file(file_name, author, target_dir=None, ):
     :param author: 作者名
     :param target_dir: 目标文件夹路径（可选，默认为当前目录）
     """
+    new_dir = False
+    
     # 检查文件名是否以 .py 结尾，如果没有则自动添加
     if not file_name.endswith(".py"):
         file_name += ".py"
@@ -28,8 +30,11 @@ def create_py_file(file_name, author, target_dir=None, ):
     if target_dir is None:
         target_dir = os.getcwd()
     else:
-        # 如果目标文件夹不存在，则创建它
-        os.makedirs(target_dir, exist_ok=True)
+        # 如果目标文件夹不存在，则初始化创建python文件夹
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+            if file_name != "__init__.py":
+                new_dir = True
 
     # 获取当前工作目录的名称作为项目名称
     project_name = os.path.basename(os.getcwd())
@@ -56,6 +61,8 @@ Update: {current_date}
         file.write(content)
 
     print(f"文件 '{file_path}' 创建成功！")
+    
+    return new_dir
 
 
 def main():
@@ -66,16 +73,20 @@ def main():
     default_author = os.getenv("DEFAULT_AUTHOR", "ZhangYuetao")
 
     # 添加命令行参数
-    parser.add_argument("file_name", type=str, help="要创建的文件名（包括 .py 后缀）")
+    parser.add_argument("file_name", type=str, 
+                        help="要创建的文件名（包括 .py 后缀）")
     parser.add_argument("-a", "--author", type=str, default=default_author,
                         help="作者名（默认为环境变量 DEFAULT_AUTHOR 或 'ZhangYuetao'）")
-    parser.add_argument("-d", "--dir", type=str, default=None, help="目标文件夹路径（可选，默认为当前目录）")
+    parser.add_argument("-d", "--dir", type=str, default=None, 
+                        help="目标文件夹路径（可选，默认为当前目录）")
 
     # 解析命令行参数
     args = parser.parse_args()
 
     # 调用函数创建文件
-    create_py_file(args.file_name, args.author, args.dir)
+    new_dir = create_py_file(args.file_name, args.author, args.dir)
+    if new_dir:
+        create_py_file("__init__.py", args.author, args.dir)
 
 
 if __name__ == "__main__":
