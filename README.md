@@ -12,7 +12,7 @@
 4. **自动生成项目结构图**：生成项目的目录结构图，支持文本和 `.gitignore` 规则。
 5. **自动创建 Python 项目文件夹**：快速生成指定类型的 Python 项目架构文件夹。
 
-> 📌 当前版本：`v0.4.0` ｜ 🆕 [查看更新日志 »](#更新日志-v0402025-06-09)
+> 📌 当前版本：`v0.4.0` ｜ 🆕 [查看更新日志 »](#更新日志)
 
 ---
 
@@ -192,11 +192,15 @@ $env:DEFAULT_AUTHOR = "your_name"
 
 ---
 
-## 更新日志-V0.4.0(2025-06-09)
+## 更新日志
+
+### V0.4.0
+
+### 2025-06-09
 
 ### ✨ 新增功能
 
-**1. auto-init-python-dir 命令**  
+**1. `auto-init-python-dir` 命令**  
   - ①可快速生成指定类型的 Python 项目架构文件夹：
     - 包含初始化`__init__.py`的空Python项目模板（默认值）
     - `software`/`crawler`/`spiders`专项模板，包括：
@@ -210,7 +214,7 @@ $env:DEFAULT_AUTHOR = "your_name"
 
 ### ⚙️ 功能优化
 
-**1. auto-init-python-file 命令**  
+**1. `auto-init-python-file` 命令**  
   - ①若创建的python文件位于新文件夹，会自动额外初始化生成`__init__.py`文件
 
 ### 📜 完整更新日志
