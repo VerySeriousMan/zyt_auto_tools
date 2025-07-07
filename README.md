@@ -12,7 +12,7 @@
 4. **自动生成项目结构图**：生成项目的目录结构图，支持文本和 `.gitignore` 规则。
 5. **自动创建 Python 项目文件夹**：快速生成指定类型的 Python 项目架构文件夹。
 
-> 📌 当前版本：`v0.4.0` ｜ 🆕 [查看更新日志 »](#更新日志)
+> 📌 当前版本：`v0.4.1` ｜ 🆕 [查看更新日志 »](#更新日志)
 
 ---
 
@@ -49,14 +49,18 @@ auto-generate-init --dir ./my_project
 auto-generate-init --include *xxx*
 ```
 
-#### ③ 你还可以通过 '**-t**' 或 '**--type**' 来选择生成的内容（func:全部函数;file:只包含文件,默认func）：
+#### ③ 你还可以通过 '**-t**' 或 '**--type**' 来选择生成的内容（public:非_开头的顶层类和函数;all:全部顶层类和函数;star:通配导入,默认public）：
 
 ```bash
-auto-generate-init --type file
+auto-generate-init --type public
 ```
 ###### or
 ```bash
-auto-generate-init --type func
+auto-generate-init --type all
+```
+###### or
+```bash
+auto-generate-init --type star
 ```
 
 #### ④ 你还可以通过 '**-a**' 或 '**--author**' 指定作者：
@@ -194,28 +198,31 @@ $env:DEFAULT_AUTHOR = "your_name"
 
 ## 更新日志
 
-### V0.4.0
+### V0.4.1
 
-### 2025-06-09
-
-### ✨ 新增功能
-
-**1. `auto-init-python-dir` 命令**  
-  - ①可快速生成指定类型的 Python 项目架构文件夹：
-    - 包含初始化`__init__.py`的空Python项目模板（默认值）
-    - `software`/`crawler`/`spiders`专项模板，包括：
-        - 配套Python文件
-        - 相关配置文件
-        - 基础UI界面框架
-  - ②可指定项目生成的文件夹：
-    - 可选择项目当前文件夹位置（默认值）
-    - 可选择指定的文件夹位置，并会自动额外初始化生成`__init__.py`文件
-  - ③可指定项目各文件作者
+### 2025-07-07
 
 ### ⚙️ 功能优化
 
-**1. `auto-init-python-file` 命令**  
-  - ①若创建的python文件位于新文件夹，会自动额外初始化生成`__init__.py`文件
+**1. `auto-init-python-dir` 命令**  
+  - ①优化生成crawler项目初始化内容:
+    - 新增`plugins`文件夹（启动器扩展功能模块）,移动原`proxy_test.py`
+    - 新增`utils`文件夹（通用函数与log记录函数）,移动原`utils.py`
+    - 新增`settings`文件夹（配置文件夹）,移动原`lake`文件夹
+    - 新增`logger.py`（日志配置）
+    - 新增`start_crawler.py`（爬虫系统启动代码）
+    - 优化`config.py`
+    - 优化`spiders/example.py`
+  - ②优化生成software项目初始化内容:
+    - 优化`network/server_connect.py`函数导入顺序
+
+**2. `auto-generate_init` 命令**  
+  - ①优化导入内容生成，现在会只包含顶层的类与函数
+  - ②优化type参数，新增选择是否导入以 `_` 开头的顶层类或函数
+  - ③优化type参数名:
+    - public:非_开头的顶层类和函数(默认参数)
+    - all:全部顶层类和函数
+    - star:通配导入
 
 ### 📜 完整更新日志
 

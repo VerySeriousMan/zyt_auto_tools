@@ -1,249 +1,144 @@
 
 import os
-import random
 import time
+import re
 
-import requests
-from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-import zyt_validation_utils
+import requests
 
 import utils
+import config
+from logger import logger
 
-USED_VIDEO_URLS = set()
-USED_IMAGE_URLS = set()
-VIDEO_IDX = 1
-IMAGE_IDX = 1
-PAGE_IDX = 1
+WEB_NAME = 'example'
 
-type_name = 'animal'
+basic_setting = config.load_config(config.BASIC_SETTING_PATH, config.BASIC_SETTING_DEFAULT_CONFIG)
+save_path = basic_setting["save_path"]
+type_name = basic_setting["type_name"]
 
-# 初始化
-try:
-    with open(f'history/example/{type_name}/example_video_urls.txt', 'r') as url_file:
-        USED_VIDEO_URLS = set(url.strip() for url in url_file.readlines())
-except FileNotFoundError:
-    # 如果文件不存在，创建一个空的 USED_VIDEO_URLS
-    pass
+VIDEO_IDX = config.get_idx(WEB_NAME, type_name, 'videos')
+IMAGE_IDX = config.get_idx(WEB_NAME, type_name, 'images')
 
-try:
-    with open(f'history/xhs/{type_name}/example_image_urls.txt', 'r') as url_file:
-        USED_IMAGE_URLS = set(url.strip() for url in url_file.readlines())
-except FileNotFoundError:
-    # 如果文件不存在，创建一个空的 USED_IMAGE_URLS
-    pass
+USED_VIDEO_URLS = config.init_used_urls(config.get_save_history_path(WEB_NAME, type_name, 'used', 'videos'))
+USED_IMAGE_URLS = config.init_used_urls(config.get_save_history_path(WEB_NAME, type_name, 'used', 'images'))
+USED_PAGE_URLS = config.init_used_urls(config.get_save_history_path(WEB_NAME, type_name, 'used', 'pages'))
+
+utils.begin_logger(WEB_NAME, save_path, type_name, 
+                   video_idx=VIDEO_IDX, image_idx=IMAGE_IDX,
+                   used_video_urls=USED_VIDEO_URLS, used_image_urls=USED_IMAGE_URLS, used_page_urls=USED_PAGE_URLS)
 
 
 def add_video_idx():
+    """
+    增加视频索引。
+    """
     global VIDEO_IDX
     VIDEO_IDX = VIDEO_IDX + 1
 
+
 def add_image_idx():
+    """
+    增加图片索引。
+    """
     global IMAGE_IDX
     IMAGE_IDX = IMAGE_IDX + 1
 
 
-def add_page_idx():
-    global PAGE_IDX
-    PAGE_IDX = PAGE_IDX + 1
+def search_pages(keyword, max_scroll=10, save_way=0, random_proxy=False, random_user_agent=False, headless=False, use_open_chrome=False, need_load=False):
+    """
+    搜索example页面链接。
+    
+    :param keyword: 搜索关键词。
+    :param max_scroll: 最大滚动次数。
+    :param save_way: 保存方式（0=全部，1=仅视频，2=仅图片）。
+    :param random_proxy: 是否使用随机代理。
+    :param random_user_agent: 是否使用随机 User-Agent。
+    :param headless: 是否启用无头模式。
+    :param use_open_chrome: 是否使用已打开的 Chrome 浏览器。
+    :param need_load: 是否需要手动登录页面。
+    :return: 搜索到的页面链接列表。
+    """
+    options = utils.create_option(random_proxy, random_user_agent, headless, use_open_chrome)
+    
+    driver = webdriver.Chrome(options=options)
 
-def create_option():
-    options = Options()
-    options.add_argument('--ignore-certificate-errors')  # 忽略证书错误
-    options.add_argument('--no-first-run')  # 跳过首次运行向导
-    options.add_argument('--disable-blink-features=AutomationControlled')  # 反爬虫检测
-    options.add_argument('--disable-background-networking')  # 禁用后台网络交互
-    options.add_argument('--disable-sync')  # 关闭账号同步
-    options.add_argument('--disable-extensions')  # 禁用扩展
-    options.add_argument('--disable-default-apps')  # 禁用默认应用
-    options.add_argument('--disable-translate')  # 禁用翻译
-    options.add_argument('--disable-web-resources')  # 禁用网络资源加载
-    options.add_argument('--disable-component-update')  # 禁用组件更新
-    options.add_argument('--disable-domain-reliability')  # 禁用域名可靠性检测
-    options.add_argument('--disable-notifications')  # 禁用通知
-    options.add_argument('--disable-features=TranslateUI')  # 关闭翻译 UI
-    options.add_argument('--no-sandbox')  # 以 root 运行
-    options.add_argument('--disable-dev-shm-usage')  # 共享内存不足时避免崩溃
-    options.add_argument('--log-level=3')  # 只显示严重错误，减少日志
-    options.add_argument(f'--proxy-server={utils.get_random_proxy()}')
-    options.add_argument(f'--user-agent={utils.get_random_user_agent()}')
+    if need_load:
+        logger.info("需要手动登录页面")
+        # 加载登录页面
+        driver.get('https://www.example.com/login')
+        
+        # 等待用户手动登录
+        print("请在浏览器中手动登录，登录完成后按 Enter 键继续...")
+        input()
+        
+        logger.info("登录完成,开始搜索")
 
-    options.debugger_address = "127.0.0.1:9222"  # 连接已打开网页
+    # 加载搜索页面
+    search_url = f'https://www.example.com/keyword={keyword}'
+    
+    all_urls = set()
 
-    return options
-
-
-options = create_option()
-
-driver = webdriver.Chrome(options=options)
-
-
-def reload_web():
-    global driver
-    if driver:
-        try:
-            driver.quit()
-        except Exception as e:
-            print(f"关闭旧会话失败:{e}")
-
-    new_options = create_option()
-
-    driver = webdriver.Chrome(options=new_options)
-
-
-def try_web():
-    try:
-        driver.get('https://www.example.com')
-        print(f"页面加载成功，开始等待")
-        time.sleep(60)
-        return True
-    except Exception as e:
-        print(f"页面加载失败：{str(e)}")
-        return False
-
-
-def change_web(try_time=5):
-    print('begin change web')
-    cnt = 0
-    while cnt < try_time:
-        cnt = cnt + 1
-        print(f'try {cnt} times')
-        reload_web()
-
-        if try_web():
-            break
-        else:
-            time.sleep(10)
-
-
-def get_page_urls(keyword, max_page=10):
-    all_urls = []
-
-    search_url = f'https://www.example.com/'
-    driver.get(search_url)
-
-    for page in range(max_pages):
-        print(f"begin page: [{page}]")
-        # 加载搜索页面
-        time.sleep(5)
-        retries = 0
-        max_retries = 3
-
-        while retries < max_retries:
-            try:
-                page_links = WebDriverWait(driver, 10).until(
-                    EC.presence_of_all_elements_located((By.CSS_SELECTOR, 'example')))
-
-                print(f"get {len(page_links)} urls")
-                for page_link in page_links:
-                    page_url = page_link.get_attribute('href')
-
-                    if page_url:
-                        all_urls.append(page_url)
-
-                next_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((
-                        By.CSS_SELECTOR, 'example')))
-
-                next_button.click()
-                break
-            except Exception as e:
-                retries += 1  # 失败后增加重试次数
-                print(f"失败，进行重试，重试次数：{retries}/{max_retries}，错误信息：{e}")
-                driver.refresh()
-                time.sleep(10)
-                if retries == max_retries:
-                    print("重试次数达到最大值，查找失败:{e}。")
-
-        if retries == max_retries:
-            print(f"提早退出：{page}")
-            break
-
-    all_urls = list(set(all_urls))
-    print(f"获取到 {len(all_urls)} 条 URL。")
-    utils.save_list_to_txt(f'history/example/{type_name}/example_get_page_urls.txt', all_urls)
+    pass
 
     return all_urls
 
 
-def get_info_urls(all_urls):
-    video_urls = []
-    image_urls = []
-
-    for url in urls:
-        time.sleep(round(random.uniform(1, 1.5), 2))
-        print(f"begin: {url}")
-
-        retries = 0
-        max_retries = 3
-        response = None
-        while retries < max_retries:
-            try:
-                headers = {
-                    'User-Agent': utils.get_random_user_agent(),
-                    'Referer': 'https://www.example.com/',  # 设置Referer
-                }
-
-                response = requests.get(url, headers=headers, proxies={'https': utils.get_random_proxy()}, timeout=10)
-
-                response.raise_for_status()
-
-                break
-            except Exception as e:
-                print(f'{e}, begin retry')
-                retries += 1  # 失败后增加重试次数
-
-        if not response:
-            continue
-
-        html = response.text
-        # 解析 HTML
-        soup = BeautifulSoup(html, 'html.parser')
-
-        image_tags = soup.find_all('img', class_=" ")  # example
-        video_tags = soup.find_all('video', class_=" ")  # example
-
-        for img in image_tags:
-            src = img.get('src')
-            if src:  # 确保 src 不为空
-                image_urls.append(src)
-        
-        for video in video_tags:
-            src = video.get('src')
-            if src:  # 确保 src 不为空
-                video_urls.append(src)
-
-        file_path = f'history/example/{type_name}/used_page_urls.txt'
-        mode = "a" if os.path.exists(file_path) else "w"
-
-        with open(file_path, mode) as f:
-            f.write(url + '\n')
+def get_urls(all_urls):
+    """
+    获取视频和图片链接。
     
-    video_urls = list(set(video_urls))
-    image_urls = list(set(image_urls))
+    :param all_urls: 页面URL列表。
+    :return: 视频url列表，图片url列表。
+    """
+    image_urls = []
+    video_urls = []
+    
+    for url in all_urls:
+        if url in USED_PAGE_URLS:
+            logger.info(f"链接 {url} 已经处理过，跳过下载。")
+            continue
+        
+        for _ in range(5):
+            try:
+                logger.info(f'begin{url}')
+                
+                pass
 
-    print(f'共获取{len(video_urls)}个视频, {len(image_urls)}个图片')
+                logger.info(f'end{note_url}')
+                utils.save_list_to_txt(config.get_save_history_path(WEB_NAME, type_name, 'used', 'pages'), [note_url])
+                USED_PAGE_URLS.add(note_url)
+                
+                break
 
-    utils.save_list_to_txt(f'history/example/{type_name}/get_video_urls.txt', list(video_urls))      
-    utils.save_list_to_txt(f'history/example/{type_name}/get_image_urls.txt', list(image_urls))
+            except Exception as e:
+                logger.error(f'{proxy}获取url失败: {e}')
+                continue
+        
+    utils.save_list_to_txt(config.get_save_history_path(WEB_NAME, type_name, 'get', 'videos'), video_urls)
+    utils.save_list_to_txt(config.get_save_history_path(WEB_NAME, type_name, 'get', 'images'), image_urls)
+    logger.info(f"获取到 {len(video_urls)} 条视频URL, {len(image_urls)}条图片URL。")
 
     return video_urls, image_urls
 
 
-def download_urls(url_infos, save_dir, save_way=0):  # save_way=0表示下载视频和图片，=1表示只下载视频，=2表示只下载图片
+def download_urls(video_urls, image_urls, save_dir, save_way=0):
+    """
+    下载视频和图片。
+    
+    :param video_urls: 视频url列表。
+    :param image_urls: 图片url列表。
+    :param save_dir: 保存路径。
+    :param save_way: 下载方式: save_way=0表示下载视频和图片，=1表示只下载视频，=2表示只下载图片
+    """
     image_dir = os.path.join(save_dir, 'image')
     video_dir = os.path.join(save_dir, 'video')
     os.makedirs(image_dir, exist_ok=True)
     os.makedirs(video_dir, exist_ok=True)
 
-    if not url_infos:
-        print('urls empty')
+    if not video_urls and not image_urls:
+        logger.warning('urls empty')
         return
-
-    video_urls = url_infos[0]
-    image_urls = url_infos[1]
 
     old_video_idx = VIDEO_IDX
     old_image_idx = IMAGE_IDX
@@ -259,35 +154,41 @@ def download_urls(url_infos, save_dir, save_way=0):  # save_way=0表示下载视
     else:
         for image_url in image_urls:
             download_image(image_url, image_dir)
+            
+    config.update_idx(WEB_NAME, type_name, 'videos', VIDEO_IDX)
+    config.update_idx(WEB_NAME, type_name, 'images', IMAGE_IDX)
 
-    print(f"下载全部完成，本次共下载{VIDEO_IDX-old_video_idx}个视频，{IMAGE_IDX-old_image_idx}个图片（新计数值，VIDEO_IDX={VIDEO_IDX},IMAGE_IDX={IMAGE_IDX})")
+    logger.info(f"下载全部完成，本次共下载{VIDEO_IDX-old_video_idx}个视频，{IMAGE_IDX-old_image_idx}个图片（新计数值，VIDEO_IDX={VIDEO_IDX},IMAGE_IDX={IMAGE_IDX})")
 
 
 def download_video(video_url, save_dir):
+    """
+    下载视频。
+    
+    :param video_url: 视频url。
+    :param save_dir: 保存目录。
+    """
     if not video_url:
-        print('empty！')
+        logger.info('视频链接为空，跳过下载。')
         return
 
     if video_url in USED_VIDEO_URLS:
-        print(f"视频链接 {video_url} 已经处理过，跳过下载。")
+        logger.info(f"视频链接 {video_url} 已经处理过，跳过下载。")
         return
-
-    # 发送 GET 请求获取视频内容
-    header = {
-        'User-Agent': utils.get_random_user_agent(),
-        'Referer': 'https://www.example.com/',  # 设置Referer
-    }
 
     for _ in range(5):
         proxy = utils.get_random_proxy()
         try:
+            header = {
+                'User-Agent': utils.get_random_user_agent(),
+                'Referer': 'https://www.example.com/',  # 设置Referer
+            }
+                
             response = requests.get(video_url, headers=header, proxies={'https': proxy}, stream=True, timeout=10)
             response.raise_for_status()  # 如果请求失败，抛出异常
 
             current_time = utils.get_formatted_timestamp()
-
-            filename = f'C_examplev{VIDEO_IDX:05d}_{current_time}.mp4'
-
+            filename = f'{type_name}_examplevideo{VIDEO_IDX:05d}_{current_time}.mp4'
             save_path = os.path.join(save_dir, filename)
 
             # 将视频内容写入文件
@@ -296,59 +197,112 @@ def download_video(video_url, save_dir):
                     if chunk:
                         file.write(chunk)
 
-            with open(f'history/example/{type_name}/example_video_urls.txt', 'a') as url:
-                url.write(video_url + '\n')
-
+            utils.save_list_to_txt(config.get_save_history_path(WEB_NAME, type_name, 'used', 'videos'), [video_url])
             USED_VIDEO_URLS.add(video_url)
-
             add_video_idx()
 
-            print(f"视频已成功下载到 {save_path}")
+            logger.info(f"视频已成功下载到 {save_path}")
             break
-        except requests.exceptions.RequestException as e:
-            print(f"{proxy}_下载失败: {e}")
+        except Exception as e:
+            logger.error(f"{proxy}_下载失败: {e}")
             continue
 
 
 def download_image(image_url, save_dir):
+    """
+    下载图片。
+    
+    :param image_url: 图片url列表。
+    :param save_dir: 保存路径。
+    """
     if not image_url:
-        print('empty！')
+        logger.info('图片链接为空，跳过下载。')
         return
 
     if image_url in USED_IMAGE_URLS:
-        print(f"图片链接 {image_url} 已经处理过，跳过下载。")
+        logger.info(f"图片链接 {image_url} 已经处理过，跳过下载。")
         return
-
-    # 发送 GET 请求获取视频内容
-    header = {
-        'User-Agent': utils.get_random_user_agent(),
-    }
 
     for _ in range(5):
         proxy = utils.get_random_proxy()
+        
+        header = {
+                'User-Agent': utils.get_random_user_agent(),
+                'Referer': 'https://www.example.com/',  # 设置Referer
+            }
         try:
             response = requests.get(image_url, headers=header, proxies={'https': proxy}, stream=True, timeout=10)
             response.raise_for_status()  # 如果请求失败，抛出异常
             image_data = response.content
 
             current_time = utils.get_formatted_timestamp()
-
-            filename = f'C_examplei{IMAGE_IDX:05d}_{current_time}.jpg'
-
+            filename = f'{type_name}_exampleimage{IMAGE_IDX:05d}_{current_time}.jpg'
             save_path = os.path.join(save_dir, filename)
 
             with open(save_path, 'wb') as file:
                 file.write(image_data)
 
-            with open(f'history/example/{type_name}/example_image_urls.txt', 'a') as url:
-                url.write(image_url + '\n')
-
+            utils.save_list_to_txt(config.get_save_history_path(WEB_NAME, type_name, 'used', 'images'), [image_url])
             USED_IMAGE_URLS.add(image_url)
-
             add_image_idx()
 
-            print(f"图片已成功下载到 {save_path}")
+            logger.info(f"图片已成功下载到 {save_path}")
             break
         except requests.exceptions.RequestException as e:
-            print(f"{proxy}_下载失败: {e}")
+            logger.error(f"{proxy}_下载失败: {e}")
             continue
+
+
+def run(keywords, save_dir, max_scroll=10, save_way=0, random_proxy=False, random_user_agent=False, 
+        headless=False, use_open_chrome=False, need_load=False, have_pages=False, have_urls=False):
+    """
+    统一入口函数，供调度器调用。
+    
+    :param keywords: 关键词列表。
+    :param save_dir: 保存路径。
+    :param max_scroll: 最大滚动次数。
+    :param save_way: 保存方式（0=全部，1=仅视频，2=仅图片）。
+    :param random_proxy: 是否使用随机代理。
+    :param random_user_agent: 是否使用随机User-Agent。
+    :param headless: 是否启用无头模式。
+    :param use_open_chrome: 是否使用已打开的Chrome浏览器。
+    :param need_load: 是否需要手动登录页面。
+    :param have_pages: 是否已经获取过页面链接。
+    :param have_urls: 是否已经获取过视频和图片链接。
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    
+    old_video_idx = VIDEO_IDX
+    old_image_idx = IMAGE_IDX
+
+    for keyword in keywords:
+        logger.info(f'========== 开始处理关键词: {keyword} ==========')
+        try:
+            if have_pages:
+                pages = utils.read_list_from_txt(config.get_save_history_path(WEB_NAME, type_name, 'get', 'pages'))
+            else:
+                pages = search_pages(keyword, max_scroll, save_way, random_proxy, random_user_agent, headless, use_open_chrome, need_load)
+                need_load = False  # 下次搜索时不需要加载登录页面
+                
+            if not pages:
+                logger.warning(f"关键词[{keyword}]未获取到有效页面链接，跳过。")
+                continue
+            
+            if have_urls:
+                video_urls = utils.read_list_from_txt(config.get_save_history_path(WEB_NAME, type_name, 'get', 'videos'))
+                image_urls = utils.read_list_from_txt(config.get_save_history_path(WEB_NAME, type_name, 'get', 'images'))
+            else:
+                video_urls, image_urls = get_urls(pages)
+            
+            if not video_urls and not image_urls:
+                logger.warning(f"关键词[{keyword}]未提取到有效资源，跳过。")
+                continue
+
+            download_urls(video_urls, image_urls, save_dir, save_way)
+        except Exception as e:
+            logger.error(f"[关键词: {keyword}] 抓取失败: {e}")
+        logger.info(f'========== 完成关键词: {keyword} ==========')
+    
+    utils.end_logger(WEB_NAME, save_dir, type_name, 
+                     video_idx=VIDEO_IDX, image_idx=IMAGE_IDX,
+                     new_video_count=VIDEO_IDX-old_video_idx, new_image_count=IMAGE_IDX-old_image_idx)

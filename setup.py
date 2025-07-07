@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2025.01.02
 Author: ZhangYuetao
 File Name: setup.py
-Update: 2025.06.09
+Update: 2025.07.07
 """
 
 from setuptools import setup, find_packages
@@ -16,7 +16,7 @@ with open("README.md", "r", encoding="utf-8") as f:
 # noinspection PyInterpreter
 setup(
     name="zyt_auto_tools",
-    version="0.4.0",
+    version="0.4.1",
     author="ZhangYuetao",
     author_email="zhang894171707@gmail.com",
     description="A collection of automation tools for Python projects",
@@ -34,8 +34,12 @@ setup(
             "templates/software/ui/main/*.txt",
             "templates/software/settings/*.txt",
             "templates/crawler/*.txt",
-            "templates/crawler/lake/*.txt",
+            "templates/crawler/settings/*.txt",
+            "templates/crawler/settings/lake/*.txt",
+            "templates/crawler/settings/cookies/*.txt",
             "templates/crawler/spiders/*.txt",
+            "templates/crawler/plugins/*.txt",
+            "templates/crawler/utils/*.txt",
             "templates/spiders/*.txt",
             "templates/spiders/settings/*.txt",
             "templates/spiders/settings/lake/*.txt",

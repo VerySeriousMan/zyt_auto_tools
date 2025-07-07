@@ -3,9 +3,10 @@ import os
 import subprocess
 import sys
 import time
-import toml
 import shutil
+
 import smbclient
+import toml
 
 from utils import is_file_complete
 import config
@@ -153,7 +154,7 @@ def update_software(software_dir, software_name):
 
         new_software_path = None
 
-        for root, dirs, files in smbclient.walk(update_software_dir):
+        for root, _, files in smbclient.walk(update_software_dir):
             files = [f for f in files if not f.startswith('.')]  # 排除隐藏文件
             for file in files:
                 if file.endswith('.exe'):

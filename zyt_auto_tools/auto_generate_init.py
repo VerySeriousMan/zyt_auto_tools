@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2023.12.30
 Author: ZhangYuetao
 File Name: auto_generate_init.py
-Update: 2025.01.23
+Update: 2025.07.07
 """
 
 import sys
@@ -20,8 +20,8 @@ def get_project_name(use_files):
     """
     从 文件中获取项目名称。
 
-    :param use_files: 文件路径列表
-    :return: 项目名称
+    :param use_files: 文件路径列表。
+    :return: 项目名称。
     """
     for file_path in use_files:
         with open(file_path, "r", encoding="utf-8") as f:
@@ -32,12 +32,13 @@ def get_project_name(use_files):
     return os.path.basename(os.getcwd())  # 如果未找到，则使用项目根目录的名称
 
 
-def extract_functions_from_file(file_path):
+def extract_top_level_defs(file_path, type="public"):
     """
-    从 Python 文件中提取函数名。
+    从 Python 文件中提取顶层函数名和类名（不包括类内函数）。
 
-    :param file_path: 文件路径
-    :return: 函数名列表
+    :param file_path: 文件路径。
+    :param type: 导入类型。
+    :return: 顶层类与函数列表。
     """
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -45,23 +46,31 @@ def extract_functions_from_file(file_path):
     # 解析文件的抽象语法树（AST）
     tree = ast.parse(content)
 
-    # 提取所有函数定义
+    # 提取所有函数与类的定义
     functions = []
-    for node in ast.walk(tree):
+    classes = []
+
+    # 只遍历顶层节点
+    for node in tree.body:
         if isinstance(node, ast.FunctionDef):
-            functions.append(node.name)
-    return functions
+            if type == "all" or not node.name.startswith("_"):
+                functions.append(node.name)
+        elif isinstance(node, ast.ClassDef):
+            if type == "all" or not node.name.startswith("_"):
+                classes.append(node.name)
 
+    return classes + functions
 
-def generate_init_file_with_func(file_dir, includes, project_name, file_created_date, author):
+def generate_init_file_with_name(file_dir, includes, type, project_name, file_created_date, author):
     """
-    生成函数内容的__init__.py文件。
+    生成顶层函数与类内容的__init__.py文件。
 
-    :param file_dir: 文件目录路径
-    :param includes: 指定包含内容的文件名
-    :param project_name: 项目名称
-    :param file_created_date: 文件创建日期
-    :param author: 作者名
+    :param file_dir: 文件目录路径。
+    :param includes: 指定包含内容的文件名。
+    :param type: 导入类型。
+    :param project_name: 项目名称。
+    :param file_created_date: 文件创建日期。
+    :param author: 作者名。
     """
     # 获取当前日期
     today = datetime.now().strftime("%Y.%m.%d")
@@ -110,12 +119,12 @@ Update: {today}
     for module_name, comment in modules.items():
         file_path = os.path.join(file_dir, f"{module_name}.py")
         if os.path.exists(file_path):
-            functions = extract_functions_from_file(file_path)
-            if functions:  # 如果当前模块有函数，才生成导入部分
+            top_levels = extract_top_level_defs(file_path, type)
+            if top_levels:  # 如果当前模块有类或函数，才生成导入部分
                 init_content += f"# 导入 {comment}\n"
                 init_content += f"from .{module_name} import (\n"
-                for func in functions:
-                    init_content += f"    {func},\n"
+                for top_level in top_levels:
+                    init_content += f"    {top_level},\n"
                 init_content += ")\n\n"
 
     # 生成 __all__ 列表
@@ -124,11 +133,11 @@ Update: {today}
     for module_name, comment in modules.items():
         file_path = os.path.join(file_dir, f"{module_name}.py")
         if os.path.exists(file_path):
-            functions = extract_functions_from_file(file_path)
-            if functions:  # 如果当前模块有函数，才生成 __all__ 部分
+            top_levels = extract_top_level_defs(file_path, type)
+            if top_levels:  # 如果当前模块有类或函数，才生成 __all__ 部分
                 init_content += f"    # {module_name}\n"
-                for func in functions:
-                    init_content += f"    '{func}',\n"
+                for top_level in top_levels:
+                    init_content += f"    '{top_level}',\n"
         init_content += "\n"
     init_content += "]\n"
 
@@ -139,15 +148,15 @@ Update: {today}
     print("新的 __init__.py 文件已生成！")
 
 
-def generate_init_file_with_file(file_dir, includes, project_name, file_created_date, author):
+def generate_init_file_with_star(file_dir, includes, project_name, file_created_date, author):
     """
-    生成 文件内容的__init__.py 文件。
+    生成通配导入内容的__init__.py 文件。
 
-    :param file_dir: 文件目录路径
-    :param includes: 指定包含内容的文件名
-    :param project_name: 项目名称
-    :param file_created_date: 文件创建日期
-    :param author: 作者名
+    :param file_dir: 文件目录路径。
+    :param includes: 指定包含内容的文件名。
+    :param project_name: 项目名称。
+    :param file_created_date: 文件创建日期。
+    :param author: 作者名。
     """
     # 获取当前日期
     today = datetime.now().strftime("%Y.%m.%d")
@@ -225,7 +234,7 @@ def main():
     parser.add_argument("-i", "--include", type=str, default="*.py", help="指定包含内容的文件名（默认为以.py结尾的文件）")
     parser.add_argument("-a", "--author", type=str, default=default_author,
                         help="作者名（默认为环境变量 DEFAULT_AUTHOR 或 'ZhangYuetao'）")
-    parser.add_argument("-t", "--type", type=str, default="func", help="__init__文件内容(func:全部函数;file:只包含文件,默认func)")
+    parser.add_argument("-t", "--type", type=str, default="public", help="__init__文件内容(public:非_开头的顶层类和函数;all:全部顶层类和函数;star:通配导入,默认public)")
 
     # 解析命令行参数
     args = parser.parse_args()
@@ -247,12 +256,12 @@ def main():
     project_name = get_project_name(use_files)
 
     # 生成 __init__.py 文件
-    if args.type == 'func':
-        generate_init_file_with_func(file_dir, args.include, project_name, today, args.author)
-    elif args.type == 'file':
-        generate_init_file_with_file(file_dir, args.include, project_name, today, args.author)
+    if args.type == 'public' or args.type == 'all':
+        generate_init_file_with_name(file_dir, args.include, args.type, project_name, today, args.author)
+    elif args.type == 'star':
+        generate_init_file_with_star(file_dir, args.include, project_name, today, args.author)
     else:
-        print(f'类型{args.type}不存在，请输入func或file')
+        print(f'类型{args.type}不存在，请输入正确的类型(public:非_开头的顶层类和函数;all:全部顶层类和函数;star:通配导入,默认public)！')
         return
 
 

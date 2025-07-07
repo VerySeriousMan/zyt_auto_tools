@@ -4,10 +4,9 @@ Project Name: zyt_auto_tools
 File Created: 2025.06.06
 Author: ZhangYuetao
 File Name: auto_init_python_dir.py
-Update: 2025.06.09
+Update: 2025.07.07
 """
 
-from math import e
 import os
 import argparse
 from datetime import datetime
@@ -53,12 +52,17 @@ Update: {current_date}
                      os.path.join('ui', '__init__.py'), os.path.join('ui', 'feedback.py'), os.path.join('ui', 'feedback.ui'),
                      os.path.join('ui', 'main', '__init__.py'), os.path.join('ui', 'main', 'main_window.py'), os.path.join('ui', 'main', 'feedback_main.py')
                      ],
-        "crawler": ["proxy_test.py", "config.py", "utils.py",
-                    os.path.join('lake', 'proxies.txt'), os.path.join('lake', 'user_agents.txt'),
-                    os.path.join('spiders', '__init__.py'), os.path.join('spiders', 'example.py')
+        "crawler": ["config.py", "logger.py", "start_crawler.py",
+                    os.path.join('settings', 'basic_setting.toml'), os.path.join('settings', 'chrome_setting.toml'),
+                    os.path.join('settings', 'lake', 'proxies.txt'), os.path.join('settings', 'lake', 'user_agents.txt'), 
+                    os.path.join('settings', 'cookies', 'load_cookies.toml'),
+                    os.path.join('spiders', '__init__.py'), os.path.join('spiders', 'example.py'),
+                    os.path.join('utils', '__init__.py'), os.path.join('utils', 'generic_utils.py'), os.path.join('utils', 'log_utils.py'),
+                    os.path.join('plugins', '__init__.py'), os.path.join('plugins', 'open_chrome.py'), os.path.join('plugins', 'proxy_test.py')
                     ],
         "spiders": ["proxy_test.py", "config.py", "utils.py", "start_crawler.py", "scrapy.cfg",
-                    os.path.join('settings', 'basic_settings.toml'),os.path.join('settings', 'lake', 'proxies.txt'), os.path.join('settings', 'lake', 'user_agents.txt'),
+                    os.path.join('settings', 'basic_settings.toml'), 
+                    os.path.join('settings', 'lake', 'proxies.txt'), os.path.join('settings', 'lake', 'user_agents.txt'),
                     os.path.join('web_spiders', '__init__.py'), os.path.join('web_spiders', 'items.py'), os.path.join('web_spiders', 'middlewares.py'),
                     os.path.join('web_spiders', 'pipelines.py'), os.path.join('web_spiders', 'settings.py'),
                     os.path.join('web_spiders', 'spiders', '__init__.py'), os.path.join('web_spiders', 'spiders', 'example.py')

@@ -2,6 +2,34 @@
 
 ---
 
+## V0.4.1
+
+### 2025-07-07
+
+### ⚙️ 功能优化
+
+**1. `auto-init-python-dir` 命令**  
+  - ①优化生成crawler项目初始化内容:
+    - 新增`plugins`文件夹（启动器扩展功能模块）,移动原`proxy_test.py`
+    - 新增`utils`文件夹（通用函数与log记录函数）,移动原`utils.py`
+    - 新增`settings`文件夹（配置文件夹）,移动原`lake`文件夹
+    - 新增`logger.py`（日志配置）
+    - 新增`start_crawler.py`（爬虫系统启动代码）
+    - 优化`config.py`
+    - 优化`spiders/example.py`
+  - ②优化生成software项目初始化内容:
+    - 优化`network/server_connect.py`函数导入顺序
+
+**2. `auto-generate_init` 命令**  
+  - ①优化导入内容生成，现在会只包含顶层的类与函数
+  - ②优化type参数，新增选择是否导入以 `_` 开头的顶层类或函数
+  - ③优化type参数名:
+    - public:非_开头的顶层类和函数(默认参数)
+    - all:全部顶层类和函数
+    - star:通配导入
+
+---
+
 ## V0.4.0
 
 ### 2025-06-09
