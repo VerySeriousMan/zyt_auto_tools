@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2025.06.06
 Author: ZhangYuetao
 File Name: auto_init_python_dir.py
-Update: 2025.07.07
+Update: 2025.08.12
 """
 
 import os
@@ -116,6 +116,9 @@ Update: {current_date}
 
 
 def main():
+    """
+    主函数，用于命令行调用
+    """
     # 创建 ArgumentParser 对象
     parser = argparse.ArgumentParser(description="自动初始化创建python项目文件夹，并填充初始内容")
 

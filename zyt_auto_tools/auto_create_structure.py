@@ -4,7 +4,7 @@ Project Name: zyt_auto_tools
 File Created: 2025.01.26
 Author: ZhangYuetao
 File Name: auto_create_structure.py
-Update: 2025.01.26
+Update: 2025.08.12
 """
 
 import os
@@ -53,7 +53,12 @@ DEFAULT_IGNORES = {
 
 
 def load_gitignore(directory):
-    """从项目目录加载 .gitignore 文件并返回忽略规则集合"""
+    """
+    从项目目录加载 .gitignore 文件并返回忽略规则集合。
+
+    :param directory: 项目目录。
+    :return: 忽略规则集合。
+    """
     gitignore_path = Path(directory) / '.gitignore'
     if not gitignore_path.is_file():
         return set()
@@ -69,15 +74,28 @@ def load_gitignore(directory):
 
 
 def is_ignored(name, ignore_patterns):
-    """检查文件或目录是否匹配忽略模式"""
+    """
+    检查文件或目录是否匹配忽略模式。
+
+    :param name: 文件或目录名称。
+    :param ignore_patterns: 忽略模式集合。
+    :return: 是否匹配忽略模式。
+    """
     for pattern in ignore_patterns:
         if fnmatch.fnmatch(name, pattern):
             return True
     return False
 
 
-def generate_text_tree(directory, output_file=None, ignore_patterns=None, use_gitignore=False):
-    """生成文本结构树"""
+def generate_text_tree(directory, output_file=None, ignore_patterns=None, use_gitignore=False, only_dirs=False):
+    """
+    生成文本结构树。
+
+    :param directory: 目录路径。
+    :param output_file: 输出文件路径。
+    :param ignore_patterns: 忽略模式集合。
+    :param use_gitignore: 是否使用 .gitignore 文件。
+    """
     # 如果启用 use_gitignore，则替换默认忽略列表
     if use_gitignore:
         ignore_patterns = load_gitignore(directory) | (ignore_patterns or set())
@@ -98,10 +116,23 @@ def generate_text_tree(directory, output_file=None, ignore_patterns=None, use_gi
             dirname = os.path.basename(path)
             tree.append(f"{prefix}└── **no_permission_dir（{dirname}）**/")
             return
+        
+        dirs = []
+        files = []
 
-        for index, entry in enumerate(entries):
+        for entry in entries:
             full_path = os.path.join(path, entry)
-            is_last = index == len(entries) - 1
+            if os.path.isdir(full_path):
+                dirs.append(entry)
+            elif not only_dirs:
+                files.append(entry)
+
+        # 文件夹优先
+        all_entries = dirs + files
+
+        for index, entry in enumerate(all_entries):
+            full_path = os.path.join(path, entry)
+            is_last = index == len(all_entries) - 1
 
             if os.path.isdir(full_path):
                 tree.append(f"{prefix}{'└── ' if is_last else '├── '}{entry}/")
@@ -122,6 +153,9 @@ def generate_text_tree(directory, output_file=None, ignore_patterns=None, use_gi
 
 
 def main():
+    """
+    主函数，用于命令行调用。
+    """
     parser = argparse.ArgumentParser(description="自动生成项目结构图")
     parser.add_argument('-d', '--dir', default=os.getcwd(),
                         help="项目目录（默认当前目录）")
@@ -131,6 +165,8 @@ def main():
                         help="额外忽略的目录/文件（支持通配符，空格分隔）")
     parser.add_argument('--use-gitignore', action='store_true',
                         help="使用 .gitignore 文件中的规则替换默认忽略列表")
+    parser.add_argument('--only-dirs', action='store_true',
+                        help="仅生成文件夹结构，不包括文件")
 
     args = parser.parse_args()
 
@@ -139,7 +175,8 @@ def main():
             args.dir,
             output_file=args.output,
             ignore_patterns=set(args.ignore) if args.ignore else None,
-            use_gitignore=args.use_gitignore
+            use_gitignore=args.use_gitignore,
+            only_dirs=args.only_dirs
         )
     except Exception as e:
         print(f"❌ 错误：{str(e)}")

@@ -10,9 +10,10 @@
 2. **自动创建 Python 文件**：快速生成带有标准模板的 Python 文件。
 3. **自动更新文件修改时间**：更新项目中今天修改过的 `.py` 文件的 `Update` 日期。
 4. **自动生成项目结构图**：生成项目的目录结构图，支持文本和 `.gitignore` 规则。
-5. **自动创建 Python 项目文件夹**：快速生成指定类型的 Python 项目架构文件夹。
+5. **自动比较项目结构图**：快速比较一个或多个项目目录结构图，输出差异结构图。
+6. **自动创建 Python 项目文件夹**：快速生成指定类型的 Python 项目架构文件夹。
 
-> 📌 当前版本：`v0.4.1` ｜ 🆕 [查看更新日志 »](#更新日志)
+> 📌 当前版本：`v0.5.0` ｜ 🆕 [查看更新日志 »](#更新日志)
 
 ---
 
@@ -157,7 +158,36 @@ auto-create-structure --ignore *.log tests/
 auto-create-structure --use-gitignore
 ```
 
-### 5. 自动创建 Python 项目文件夹
+#### ⑤ 你还可以通过 --only-dirs 指定只输出到文件夹层级：
+
+```bash
+auto-create-structure --only-dirs
+```
+
+### 5. 自动比较项目结构图
+
+在项目根目录下运行以下命令，比较一个或多个项目目录结构图文本文件，输出差异结构图。（默认输出到控制台）：
+
+
+#### ① 你可以通过 '**-c**' 或 '**--compare**' 指定待比较文本文件; 通过 '**-b**' 或 '**--base**' 指定被比较文本文件：
+```bash
+auto-compare --compare a.txt --base b.txt
+```
+
+#### ② 支持多个待比较文件分别与多个被比较文件一起进行比较：
+
+```bash
+auto-compare --compare a1.txt a2.txt --base b1.txt b2.txt b3.txt
+```
+
+#### ③ 你还可以通过 -o 或 --output 指定输出文件路径：
+
+```bash
+auto-compare -c a.txt -b b.txt --output compare_structure.txt
+```
+
+
+### 6. 自动创建 Python 项目文件夹
 
 使用以下命令快速创建指定类型的 Python 项目文件夹（默认在项目根目录下，默认本作者, 默认类型为标准的python文件夹）：
 
@@ -198,31 +228,28 @@ $env:DEFAULT_AUTHOR = "your_name"
 
 ## 更新日志
 
-### V0.4.1
+### V0.5.0
 
-### 2025-07-07
+### 2025-08-12
+
+### ✨ 新增功能
+
+**1. `auto-compare` 命令**  
+可快速比较两个或多个树状文本文件的差异
+  - ① 可指定待比较的树状文本文件：
+    - 单个文本文件
+    - 多个文本文件分别待比较
+  - ② 可指定被比较的树状文本文件：
+    - 单个文本文件
+    - 多个文本文件一起被比较
+  - ③ 可指定图像输出路径：
+    - 只显示在命令行中（默认值）
+    - 输出并保存到指定文件路径
 
 ### ⚙️ 功能优化
 
-**1. `auto-init-python-dir` 命令**  
-  - ①优化生成crawler项目初始化内容:
-    - 新增`plugins`文件夹（启动器扩展功能模块）,移动原`proxy_test.py`
-    - 新增`utils`文件夹（通用函数与log记录函数）,移动原`utils.py`
-    - 新增`settings`文件夹（配置文件夹）,移动原`lake`文件夹
-    - 新增`logger.py`（日志配置）
-    - 新增`start_crawler.py`（爬虫系统启动代码）
-    - 优化`config.py`
-    - 优化`spiders/example.py`
-  - ②优化生成software项目初始化内容:
-    - 优化`network/server_connect.py`函数导入顺序
-
-**2. `auto-generate_init` 命令**  
-  - ①优化导入内容生成，现在会只包含顶层的类与函数
-  - ②优化type参数，新增选择是否导入以 `_` 开头的顶层类或函数
-  - ③优化type参数名:
-    - public:非_开头的顶层类和函数(默认参数)
-    - all:全部顶层类和函数
-    - star:通配导入
+**1. `auto-create-structure` 命令**  
+  - ① 新增`only-dirs`参数，可选择生成的结构图只到文件夹层级
 
 ### 📜 完整更新日志
 
